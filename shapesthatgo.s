@@ -31,16 +31,16 @@
   gravity = 1
   maxYV = 4
   screenHeight = 208
-  jumpHeight = 12
+  jumpHeight = 60
 
 .segment "ZEROPAGE"
-  playerX: .res 1
-  playerY: .res 1
-  playerXV: .res 1
-  playerYV: .res 1
-  ; jumpV: .res 1
-  isJumping: .res 1
-  onGround: .res 1
+  playerX: .res 1 ; Stores the player's x position
+  playerY: .res 1 ; Stores the player's y position
+  playerXV: .res 1 ; Stores the speed at which the player is moving in the x direction
+  playerYV: .res 1 ; Stores the speed at which the player is moving in the y direction
+  playerYAfterJump: .res 1 ; Stores the player's y position after a jump
+  isJumping: .res 1 ; Stores whether the player is currently jumping
+  onGround: .res 1 ; Stores whether the player is on the ground
 
 .segment "STARTUP"
   .include "resetroutine.s"
@@ -92,10 +92,23 @@ NMI:
     cpx #0
     beq ReadADone
 
+    ; Safety check to make sure the player isn't currently jumping
+    ldx isJumping
+    cpx #1
+    beq ReadADone
+
     ; Set player velocity for the jump
     ; This will start high then go down 
     ldx #7
     stx playerYV
+
+    ; Store the player's Y position after a jump
+    lda playerY
+    sec
+    sbc #jumpHeight
+    sta playerYAfterJump
+
+    ldy playerYAfterJump
 
     lda #1
     sta isJumping
@@ -131,9 +144,9 @@ NMI:
     ; Temporary check for not applying gravity when the player is on the ground
     ; This will have to be changed so that when the player has reached their jump height destination,
     ; they will start falling back down and accelerating with gravity again
-    lda onGround
-    cmp #1
-    beq addYV
+    ; lda isJumping
+    ; cmp #1
+    ; beq addYV
 
     lda playerYV
     clc
@@ -191,17 +204,29 @@ NMI:
     sbc playerYV
     sta playerY
 
-    ; Acceleration
-    ; lda jumpV
-    ; clc
-    ; adc #1
-    ; sta jumpV
+    ; Decrease player y velocity
+    lda playerYV
+    cmp #1
+    bcs @decreaseVelocity
 
-    cmp #jumpHeight
-    bcc done
+    jmp @dontDecreaseVelocity
+    @decreaseVelocity:
+      sbc #1
+      sta playerYV
 
+    @dontDecreaseVelocity:
+
+    ; Check if player has reached their jump height
+    lda playerY
+    cmp playerYAfterJump
+    bcc doneJumping
+
+    jmp done
+
+  doneJumping:
     lda #0
     sta isJumping
+    jmp done
     
 done:
   lda #$00
