@@ -29,7 +29,7 @@
 
 .segment "DATA"
   gravity = 1
-  maxYV = 4
+  maxYV = 6
   screenHeight = 208
   jumpHeight = 60
 
@@ -99,7 +99,7 @@ NMI:
 
     ; Set player velocity for the jump
     ; This will start high then go down 
-    ldx #7
+    ldx #14
     stx playerYV
 
     ; Store the player's Y position after a jump
@@ -144,10 +144,6 @@ NMI:
     ; Temporary check for not applying gravity when the player is on the ground
     ; This will have to be changed so that when the player has reached their jump height destination,
     ; they will start falling back down and accelerating with gravity again
-    ; lda isJumping
-    ; cmp #1
-    ; beq addYV
-
     lda playerYV
     clc
     adc #gravity
@@ -175,15 +171,6 @@ NMI:
     jmp done
 
   setOnGround:
-    ; Reset player velocity
-    ; lda #0
-    ; sta playerYV
-    ; sta jumpHeight
-
-    ; ; Reset jump velocity
-    ; lda #1
-    ; sta jumpV
-
     ; Set onGround
     lda #1
     sta onGround
@@ -206,12 +193,12 @@ NMI:
 
     ; Decrease player y velocity
     lda playerYV
-    cmp #1
+    cmp #2
     bcs @decreaseVelocity
 
     jmp @dontDecreaseVelocity
     @decreaseVelocity:
-      sbc #1
+      sbc #2
       sta playerYV
 
     @dontDecreaseVelocity:
@@ -226,6 +213,7 @@ NMI:
   doneJumping:
     lda #0
     sta isJumping
+    ; sta playerYV
     jmp done
     
 done:
