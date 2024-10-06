@@ -29,7 +29,7 @@
 
 .segment "DATA"
   gravity = 1
-  maxYV = 6
+  maxYV = 7
   screenHeight = 208
   jumpHeight = 60
 
@@ -171,6 +171,10 @@ NMI:
     jmp done
 
   setOnGround:
+    ; Reset player height
+    ldx #screenHeight
+    stx playerY
+
     ; Set onGround
     lda #1
     sta onGround
